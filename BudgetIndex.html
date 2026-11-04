@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abeer's money book lol</title>
+<link rel="stylesheet" href="BudgetStyle.css">
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<!-- ============ LOGIN ============ -->
+<main id="loginView" class="login">
+  <form id="loginForm" class="card login-card" autocomplete="on">
+    <h1>📒 Abeer's money book lol</h1>
+    <p class="sub" id="loginSub">Log in to see where your money went.</p>
+    <label>Username
+      <input id="username" name="username" autocomplete="username" required minlength="2" maxlength="30" autocapitalize="none" spellcheck="false">
+    </label>
+    <label>Password
+      <input id="password" name="password" type="password" autocomplete="current-password" required minlength="4">
+    </label>
+    <label class="check"><input type="checkbox" id="remember" checked> Remember me on this device</label>
+    <button class="btn primary" id="loginBtn" type="submit">Log in</button>
+    <p class="switch"><a href="#" id="toggleMode">New here? Create an account</a></p>
+    <p id="loginMsg" class="msg" role="alert"></p>
+  </form>
+</main>
+
+<!-- ============ APP ============ -->
+<div id="appView" class="app" hidden>
+  <header class="topbar">
+    <div class="brand">📒 <span>Abeer's money book lol</span></div>
+    <div class="top-right">
+      <select id="monthSel" aria-label="Month"></select>
+      <span class="who" id="whoami"></span>
+      <button class="btn ghost" id="logoutBtn" type="button">Log out</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="log">Expense log</button>
+    <button class="tab-btn" data-tab="budgets">Budgets</button>
+    <button class="tab-btn" data-tab="commute">Commute optimizer</button>
+    <button class="tab-btn" data-tab="goals">Savings goals</button>
+    <button class="tab-btn" data-tab="backup">Backup</button>
+  </nav>
+
+  <!-- Dashboard -->
+  <section class="tab active" id="tab-dashboard">
+    <div class="stats" id="stats"></div>
+    <div class="grid2">
+      <div class="card">
+        <h2>Budget towers <small>solid = left, outline = allotted</small></h2>
+        <div class="towers-wrap"><canvas id="towers"></canvas></div>
+        <p class="hint">Drag to spin. A red tower means that component is overspent.</p>
+      </div>
+      <div class="card">
+        <h2>Components</h2>
+        <div id="catBars"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>Insights</h2><ul class="insights" id="insights"></ul></div>
+      <div class="card"><h2>Recent expenses</h2><div id="recent"></div></div>
+    </div>
+  </section>
+
+  <!-- Log -->
+  <section class="tab" id="tab-log">
+    <div class="card">
+      <h2>Log an expense</h2>
+      <form id="expForm" class="row-form">
+        <label>Date<input type="date" id="expDate" required></label>
+        <label>Component<select id="expCat" required></select></label>
+        <label>Amount (₹)
+          <input type="text" id="expAmount" required inputmode="decimal" autocomplete="off" placeholder="e.g. 60+20+40" aria-describedby="expPreview">
+          <small id="expPreview" class="calc-preview" aria-live="polite"></small>
+        </label>
+        <label class="grow">Note<input type="text" id="expNote" maxlength="80" placeholder="e.g. Rapido to metro"></label>
+        <button class="btn primary" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Log for <span id="logMonth"></span></h2>
+      <div class="row-form filters">
+        <label>Component<select id="filterCat"></select></label>
+        <label class="grow">Search<input type="search" id="filterText" placeholder="search notes"></label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Component</th><th>Note</th><th class="num">Amount</th><th></th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+      <p class="hint" id="logTotal"></p>
+    </div>
+  </section>
+
+  <!-- Budgets -->
+  <section class="tab" id="tab-budgets">
+    <div class="grid2">
+      <div class="card">
+        <h2>Overall budget</h2>
+        <p class="big" id="totalNow"></p>
+        <form id="totalSetForm" class="row-form">
+          <label class="grow">Set to (₹)<input type="number" id="totalInput" min="0" step="1" required></label>
+          <button class="btn" type="submit">Set</button>
+        </form>
+        <form id="totalAddForm" class="row-form">
+          <label class="grow">Add extra (₹)<input type="number" id="totalAppend" min="0.01" step="0.01" required></label>
+          <button class="btn primary" type="submit">Append</button>
+        </form>
+        <p class="hint" id="allocInfo"></p>
+      </div>
+      <div class="card">
+        <h2>New component</h2>
+        <form id="catForm" class="row-form">
+          <label class="grow">Name<input type="text" id="newCatName" maxlength="24" required placeholder="e.g. Fun, Books"></label>
+          <label>Budget (₹)<input type="number" id="newCatBudget" min="0" step="1" value="0" required></label>
+          <button class="btn primary" type="submit">Create</button>
+        </form>
+        <p class="hint">Every expense you log is subtracted from the overall budget and from its component's budget.</p>
+      </div>
+    </div>
+    <div class="card"><h2>Components</h2><div id="catList"></div></div>
+  </section>
+
+  <!-- Commute -->
+  <section class="tab" id="tab-commute">
+    <div class="card">
+      <h2>Cheapest way to college</h2>
+      <div id="bestBanner" class="banner"></div>
+      <div class="row-form">
+        <label>College days / month<input type="number" id="collegeDays" min="1" max="31" step="1"></label>
+        <label>College days / week<input type="number" id="daysPerWeek" min="1" max="7" step="1"></label>
+      </div>
+      <p class="hint" id="projection"></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Going</th><th>Coming back</th><th class="num">Per day</th><th class="num">Per week</th><th class="num">Per month</th></tr></thead>
+          <tbody id="comboBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Log today's commute</h2>
+      <div class="row-form">
+        <label>Date<input type="date" id="commuteDate"></label>
+        <label class="grow">Going<select id="logGoSel"></select></label>
+        <label class="grow">Coming back<select id="logBackSel"></select></label>
+        <label>Charge to<select id="commuteCat"></select></label>
+      </div>
+      <div class="row-form">
+        <button class="btn" data-act="logGo" type="button">Log going only</button>
+        <button class="btn" data-act="logBack" type="button">Log return only</button>
+        <button class="btn primary" data-act="logBoth" type="button">Log both</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Your routes <small>edit costs any time</small></h2>
+        <div id="routeList"></div>
+      </div>
+      <div class="card">
+        <h2>Add a route</h2>
+        <form id="routeForm">
+          <div class="row-form">
+            <label>Direction<select id="rDir"><option value="go">Going to college</option><option value="back">Coming back home</option></select></label>
+            <label class="grow">Route name<input type="text" id="rName" maxlength="60" required placeholder="e.g. Bus + walk"></label>
+          </div>
+          <label>Legs, one per line as <code>label, cost</code>
+            <textarea id="rLegs" rows="5" required placeholder="Walk to bus stop, 0&#10;Bus ticket, 25"></textarea>
+          </label>
+          <button class="btn primary" type="submit">Add route</button>
+          <p class="hint">Use cost 0 for free legs, like your mom dropping you off.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Goals -->
+  <section class="tab" id="tab-goals">
+    <div class="grid2">
+      <div class="card">
+        <h2>New savings goal</h2>
+        <form id="goalForm" class="row-form">
+          <label class="grow">Goal<input type="text" id="gName" maxlength="40" required placeholder="e.g. New earphones"></label>
+          <label>Target (₹)<input type="number" id="gTarget" min="1" step="1" required></label>
+          <button class="btn primary" type="submit">Add</button>
+        </form>
+        <p class="hint">Money you save from a cheaper commute can go straight here.</p>
+      </div>
+      <div class="card"><h2>Your goals</h2><div id="goalList"></div></div>
+    </div>
+  </section>
+
+  <!-- Backup -->
+  <section class="tab" id="tab-backup">
+    <div class="card">
+      <h2>Backup &amp; restore</h2>
+      <p>Everything is saved automatically in this browser (localStorage), so it survives closing the tab and restarting. Clearing site data or switching browsers would lose it, so export a backup now and then.</p>
+      <div class="row-form">
+        <button class="btn primary" id="exportBtn" type="button">Export JSON</button>
+        <label class="file btn">Import JSON<input type="file" id="importFile" accept="application/json"></label>
+        <button class="btn danger" id="resetBtn" type="button">Reset my data</button>
+      </div>
+    </div>
+  </section>
+
+  <button class="fab" id="fab" type="button" aria-label="Log expense">＋ Log expense</button>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="budgetApp.js"></script>
+</body>
+</html>
